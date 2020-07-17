@@ -51,9 +51,10 @@ try:
 except TimeoutException:
     print("not multiple choice")
 
+# TODO find xpath for answers by ignoring certain elements that have duplicate text
 # find all mulitple choice answer elements
 answers = driver.find_elements_by_xpath(
-    "//div[@class='checkbox-and-option _tqugjn']/span[@class='perseus-radio-option-content perseus-interactive']"
+    "//div[@class='checkbox-and-option _tqugjn']//span[@class='perseus-radio-option-content perseus-interactive']"
 )
 
 # convert all answers into text and add them to one list
@@ -61,7 +62,6 @@ answer_list = []
 for answer in answers:
     answer_list.append(answer.text)
 
-# TODO FIND BETTER WAY TO CLEAN UP THESE ANSWERS RATHER THAN SCRAPING AND THEN CLEANING
 # use regex to clean up answers
 answer_list = [
     # match the format of \n4\n4\n or 4\n4\n for example
@@ -70,10 +70,10 @@ answer_list = [
 ]
 
 
-answer_list = [
-    re.sub(r"\n((*?)(\d+)(*?)(\d*))\n", r" \1 ", answer) for answer in answer_list
-]
-add spaces after commas
+# answer_list = [
+#     re.sub(r"\n((*?)(\d+)(*?)(\d*))\n", r" \1 ", answer) for answer in answer_list
+# ]
+# add spaces after commas
 answer_list = [re.sub(r",", r", ", answer) for answer in answer_list]
 
 print(answer_list)

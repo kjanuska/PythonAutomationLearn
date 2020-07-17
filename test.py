@@ -24,7 +24,7 @@ quiz_button = driver.wait.until(
     EC.element_to_be_clickable(
         (
             By.CSS_SELECTOR,
-            "._16c6bd9 > div:nth-child(1) > div:nth-child(2) > a:nth-child(1) > button:nth-child(1)",
+            "div._1c8c7sfc:nth-child(5) > div:nth-child(1) > div:nth-child(2) > a:nth-child(1) > button:nth-child(1)",
         )
     )
 )
@@ -61,23 +61,22 @@ answer_list = []
 for answer in answers:
     answer_list.append(answer.text)
 
-# use regex to clean up answers
-answer_list = [
-    # match the format of \n4\n4\n or 4\n4\n for example
-    re.sub(r"(\n?)(\d+)(\n)(\d+)(\n+)", r"\2 ", answer)
-    for answer in answer_list
-]
+# ==============================================================================
+# use regex to clean up text
+# ==============================================================================
 
-answer_list = [
-    re.sub(r"\n((.?)(\d+)(.*)(\d*))", r" \1 ", answer) for answer in answer_list
-]
-
+# match the format of \n4\n4\n or 4\n4\n for example
+re1 = (r"(\n?)(\d+)(\n)(\d+)(\n+)", r"\2 ")
+re2 = (r"\n((.?)(\d+)(.*)(\d*))", r" \1 ")
 # remove excess text
-answer_list = [re.sub(r"\n(.+)\n", "", answer) for answer in answer_list]
+re3 = (r"\n(.+)\n", "")
+re4 = (r"(.)(\d)", r"\1 \2")
 
-
+regexes = [re1, re2, re3, re4]
+for regex in regexes:
+    answer_list = [re.sub(regex[0], regex[1], answer) for answer in answer_list]
 print(answer_list)
-print("\nALL TEXT BELOW\n")
+# print("\nALL TEXT BELOW\n")
 
 # for paragraph in paragraphs:
 #     print(paragraph.text)

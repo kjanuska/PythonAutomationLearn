@@ -24,7 +24,7 @@ quiz_button = driver.wait.until(
     EC.element_to_be_clickable(
         (
             By.CSS_SELECTOR,
-            "div._1c8c7sfc:nth-child(5) > div:nth-child(1) > div:nth-child(2) > a:nth-child(1) > button:nth-child(1)",
+            "._16c6bd9 > div:nth-child(1) > div:nth-child(2) > a:nth-child(1) > button:nth-child(1)",
         )
     )
 )
@@ -51,7 +51,6 @@ try:
 except TimeoutException:
     print("not multiple choice")
 
-# TODO find xpath for answers by ignoring certain elements that have duplicate text
 # find all mulitple choice answer elements
 answers = driver.find_elements_by_xpath(
     "//div[@class='checkbox-and-option _tqugjn']//span[@class='perseus-radio-option-content perseus-interactive']"
@@ -69,16 +68,17 @@ answer_list = [
     for answer in answer_list
 ]
 
+answer_list = [
+    re.sub(r"\n((.?)(\d+)(.*)(\d*))", r" \1 ", answer) for answer in answer_list
+]
 
-# answer_list = [
-#     re.sub(r"\n((*?)(\d+)(*?)(\d*))\n", r" \1 ", answer) for answer in answer_list
-# ]
-# add spaces after commas
-answer_list = [re.sub(r",", r", ", answer) for answer in answer_list]
+# remove excess text
+answer_list = [re.sub(r"\n(.+)\n", "", answer) for answer in answer_list]
+
 
 print(answer_list)
 print("\nALL TEXT BELOW\n")
 
 # for paragraph in paragraphs:
 #     print(paragraph.text)
-# driver.quit()
+driver.quit()

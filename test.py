@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
 import time
 from selenium.common.exceptions import TimeoutException
 import re
@@ -26,16 +27,7 @@ buttons = {
 is_quiz = False
 
 
-def choose_button(practice_type):
-    if "quiz" in practice_type:
-        global is_quiz
-        is_quiz = True
-    return buttons.get(practice_type, "None")
-
-
-# ==============================================================================
 # use regex to clean up text
-# ==============================================================================
 def clean_up(answers):
     # convert all answers into text and add them to one list
     answer_list = []
@@ -65,23 +57,61 @@ def clean_up(answers):
     for regex in regexes:
         answer_list = [re.sub(regex[0], regex[1], answer) for answer in answer_list]
 
-    print(answer_list)
     return answer_list
 
 
 def scrape_multiple_choice():
     # find all mulitple choice answer elements
-    answers = driver.find_elements_by_xpath(
+    answer_text = driver.find_elements_by_xpath(
         "//div[@class='checkbox-and-option _tqugjn']//span[@class='perseus-radio-option-content perseus-interactive']"
     )
-    clean_up(answers)
+    answer_list = clean_up(answer_text)
+
+    # find actual buttons for multiple choice answers
+    # mc_answer_choices[0] = A, [1] = B, and so on
+    mc_answer_choices = driver.find_elements_by_xpath(
+        "//li[@class='_1qgxogtu perseus-radio-option']"
+    )
+    # loop through and select every answer out of all possible
+    for index in range(0, len(mc_answer_choices)):
+        mc_answer_choices[index].click()
+        # use enter to submit answer because clicking didn't work
+        driver.find_element_by_xpath("//div[@class='_64iw7hi']//button").send_keys(
+            Keys.ENTER
+        )
+        # wait until popup appears and get text
+        result = driver.wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "._ljoq2o"))
+        ).get_attribute("data-test-id")
+        if "-correct" in result:
+            print('The correct answer is "' + answer_list[index] + '"')
+            driver.find_element_by_xpath("//div[@class='_64iw7hi']//button").click()
+            break
+        # click retry button if answer is wrong
+        driver.find_element_by_xpath("//div[@class='_64iw7hi']//button").click()
 
 
 def scrape_free_response():
     print("free response")
 
 
-def intialize_problem():
+def choose_button(practice_type):
+    if "quiz" in practice_type:
+        global is_quiz
+        is_quiz = True
+    return buttons.get(practice_type, "None")
+
+
+def intialize_problem(practice_type):
+    select_button = driver.wait.until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, choose_button(practice_type),))
+    )
+    driver.execute_script("arguments[0].scrollIntoView(false);", select_button)
+    time.sleep(0.5)
+    select_button.click()
+    if is_quiz:
+        select_button.click()
+
     # find the start button and click it once loaded
     start_quiz_button = driver.wait.until(
         EC.element_to_be_clickable((By.CSS_SELECTOR, "._17h9ppyt",))
@@ -104,21 +134,7 @@ def intialize_problem():
         scrape_free_response()
 
 
-def select_practice(css_name):
-    select_button = driver.wait.until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, choose_button(css_name),))
-    )
-    driver.execute_script("arguments[0].scrollIntoView(false);", select_button)
-    time.sleep(0.5)
-    select_button.click()
-    if is_quiz:
-        select_button.click()
-    intialize_problem()
-
-
-select_practice("long_numbers_mc")
+intialize_problem("long_numbers_mc")
 # print("\nALL TEXT BELOW\n")
 
-# for paragraph in paragraphs:
-#     print(paragraph.text)
-driver.quit()
+# driver.quit()
